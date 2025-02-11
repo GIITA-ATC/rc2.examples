@@ -1,1 +1,1 @@
-# cn2.examples
+# rc2.examples
