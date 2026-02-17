@@ -1,29 +1,27 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # Copyright: See AUTHORS and COPYING
 "Usage: {0} <host> <port>"
 
 import sys
-import socket
+from socket import socket
 
 
-def main():
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((sys.argv[1], int(sys.argv[2])))
+def main(host, port):
+    with socket() as sock:
+        sock.connect((host, port))
 
-    while 1:
-        data = sys.stdin.readline().strip().encode()
-        if not data:
-            break
+        while 1:
+            data = sys.stdin.readline().strip().encode()
+            if not data:
+                break
 
-        sent = sock.send(data)
+            sock.sendall(data)
 
-        msg = bytes()
-        while len(msg) < sent:
-            msg += sock.recv(32)
+            msg = bytes()
+            while len(msg) < len(data):
+                msg += sock.recv(32)
 
-        print("Reply is '{0}'".format(msg.decode()))
-
-    sock.close()
+            print("Reply is '{0}'".format(msg.decode()))
 
 
 if len(sys.argv) != 3:
@@ -31,6 +29,6 @@ if len(sys.argv) != 3:
     sys.exit(1)
 
 try:
-    main()
+    main(sys.argv[1], int(sys.argv[2]))
 except KeyboardInterrupt:
     print("shut down")

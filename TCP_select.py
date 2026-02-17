@@ -1,11 +1,11 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # Copyright: See AUTHORS and COPYING
-"Usage: {0} <port>"
 
 import sys
-import select
-import time
 import socket
+import time
+import select
+from utils import show_select_status
 
 
 def upper(msg):
@@ -13,52 +13,47 @@ def upper(msg):
     return msg.upper()
 
 
-def child_handler(sock):
-    data = sock.recv(32)
-    if not data:
-        socks.remove(sock)
-        sock.close()
-        return
+class Server:
+    def __init__(self, port):
+        self.master = socket.socket()
+        self.master.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.master.bind(('', port))
+        self.master.listen(5)
+        self.socks = [self.master]
 
-    sock.sendall(upper(data))
+    def master_handler(self):
+        conn, client = self.master.accept()
+        self.socks.append(conn)
+        print(f"- Client connected: {client}, Total {len(self.socks)} sockets")
+
+    def child_handler(self, conn):
+        data = conn.recv(32)
+        if not data:
+            self.socks.remove(conn)
+            conn.close()
+            return
+
+        conn.sendall(upper(data))
+
+    def run(self):
+        while 1:
+            read_ready = select.select(self.socks, [], [])[0]
+            show_select_status(self.socks, read_ready)
+            for s in read_ready:
+                if s == self.master:
+                    self.master_handler()
+                else:
+                    self.child_handler(s)
 
 
-def master_handler(sock):
-    conn, client = sock.accept()
-    socks.append(conn)
-    print(f"- Client connected: {client}, Total {len(socks)} sockets")
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: {0} <port>".format(sys.argv[0]))
+        exit(1)
 
-
-def show_status(socks, read):
-    def socket_peer(sock):
-        try:
-            return sock.getpeername()
-        except OSError:
-            return "master"
-
-    print("open:  {}\nready: {}\n---".format(
-        [socket_peer(x) for x in socks],
-        [socket_peer(x) for x in read_ready]))
-
-
-if len(sys.argv) != 2:
-    print(__doc__.format(sys.argv[0]))
-    sys.exit(1)
-
-ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-ss.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-ss.bind(('', int(sys.argv[1])))
-ss.listen(30)
-
-socks = [ss]
-
-while 1:
-    read_ready = select.select(socks, [], [])[0]
-
-    for i in read_ready:
-        if i == ss:
-            master_handler(i)
-        else:
-            child_handler(i)
-
-    show_status(socks, read_ready)
+    try:
+        server = Server(int(sys.argv[1]))
+        server.run()
+    except KeyboardInterrupt:
+        print("\nServer shutting down.")
+        exit(0)

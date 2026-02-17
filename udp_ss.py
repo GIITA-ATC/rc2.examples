@@ -4,7 +4,7 @@
 
 import sys
 import time
-from socketserver import DatagramRequestHandler, ForkingUDPServer
+from socketserver import DatagramRequestHandler, UDPServer
 
 
 def upper(msg):
@@ -13,13 +13,8 @@ def upper(msg):
 
 
 class Handler(DatagramRequestHandler):
-    def __init__(self, *args):
-        self.n = 0
-        DatagramRequestHandler.__init__(self, *args)
-
     def handle(self):
-        self.n += 1
-        print("New request: {} {}".format(self.n, self.client_address))
+        print(f"New request: {self.client_address}")
         msg = self.rfile.read()
         self.wfile.write(upper(msg))
 
@@ -28,5 +23,5 @@ if len(sys.argv) != 2:
     print(__doc__.format(sys.argv[0]))
     sys.exit(1)
 
-server = ForkingUDPServer(('', int(sys.argv[1])), Handler)
+server = UDPServer(('', int(sys.argv[1])), Handler)
 server.serve_forever()

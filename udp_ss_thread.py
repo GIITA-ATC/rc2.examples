@@ -4,7 +4,7 @@
 
 import sys
 import time
-from socketserver import DatagramRequestHandler, ForkingUDPServer
+from socketserver import DatagramRequestHandler, ThreadingUDPServer
 
 
 def upper(msg):
@@ -28,5 +28,5 @@ if len(sys.argv) != 2:
     print(__doc__.format(sys.argv[0]))
     sys.exit(1)
 
-server = ForkingUDPServer(('', int(sys.argv[1])), Handler)
+server = ThreadingUDPServer(('', int(sys.argv[1])), Handler)
 server.serve_forever()

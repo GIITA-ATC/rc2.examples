@@ -5,6 +5,9 @@
 import sys
 import time
 import socket
+from multiprocessing import Pool
+
+MAX_PROCS = 20
 
 
 def upper(msg):
@@ -21,10 +24,11 @@ def main(port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind(('', port))
 
-    n = 0
-    while 1:
-        msg, client = sock.recvfrom(1024)
-        handle(sock, msg, client, n := n+1)
+    with Pool(MAX_PROCS) as pool:
+        n = 0
+        while 1:
+            msg, client = sock.recvfrom(1024)
+            pool.apply_async(handle, (sock, msg, client, n := n+1))
 
 
 if len(sys.argv) != 2:
