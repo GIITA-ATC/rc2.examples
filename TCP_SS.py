@@ -3,8 +3,8 @@
 "Usage: {0} <port>"
 
 import sys
-import os
 import time
+import os
 from socketserver import StreamRequestHandler, TCPServer
 
 
@@ -17,6 +17,7 @@ class Handler(StreamRequestHandler):
     def handle(self):
         print(f"Client connected: {self.client_address}")
         while 1:
+            # directread from socket (bypasses rfile buffering)
             data = os.read(self.rfile.fileno(), 32)
             if not data:
                 break

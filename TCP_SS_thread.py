@@ -17,6 +17,7 @@ class Handler(StreamRequestHandler):
     def handle(self):
         print(f"Client connected: {self.client_address}")
         while 1:
+            # direct read from socket (bypasses rfile buffering)
             data = os.read(self.rfile.fileno(), 32)
             if not data:
                 break
@@ -33,6 +34,5 @@ if len(sys.argv) != 2:
     print(__doc__.format(sys.argv[0]))
     sys.exit(1)
 
-server = CustomTCPServer(('', int(sys.argv[1])),
-                                  Handler)
+server = CustomTCPServer(('', int(sys.argv[1])), Handler)
 server.serve_forever()

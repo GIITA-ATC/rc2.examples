@@ -37,6 +37,7 @@ class Server:
 
     def run(self):
         while 1:
+            # time.sleep(2)  # Try this to see more descriptors ready
             read_ready = select.select(self.socks, [], [])[0]
             show_select_status(self.socks, read_ready)
             for s in read_ready:

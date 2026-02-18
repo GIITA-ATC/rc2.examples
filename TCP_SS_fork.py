@@ -17,6 +17,7 @@ class Handler(StreamRequestHandler):
     def handle(self):
         print(f"Client connected: {self.client_address}")
         while 1:
+            # direct read from socket (bypasses rfile buffering)
             data = os.read(self.rfile.fileno(), 32)
             if not data:
                 break
